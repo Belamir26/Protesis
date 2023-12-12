@@ -31,7 +31,6 @@ void loop() {
     lcd.printf("ADC: %1d     ",s32Value);
     lcd.setCursor(0,2);
     lcd.printf("MiliVolts: %.2f      ", fValue/10);
-    Serial.printf("\nADC: 0x%08lX (%ld) -> %.3f\n", s32Value, s32Value, fValue);
     adc.Trigger();
   }
 }
