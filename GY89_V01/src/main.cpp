@@ -46,7 +46,13 @@ void loop() {
   Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print("  ");Serial.println("m/s");
 
 
+
+  Serial.print("X: RAW "); Serial.print(accel.raw.x); Serial.print("  ");
+  Serial.print("Y: RAW"); Serial.print(accel.raw.y); Serial.print("  ");
+  Serial.print("Z: RAW"); Serial.print(accel.raw.z); Serial.print("  ");Serial.println("  ");
+
   //Pilas que tambien puedo acquirir el valor crudo o RAW.. 
-  delay(2000);
+  delay(1000);
+
 }
 
