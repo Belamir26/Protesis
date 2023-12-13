@@ -2,6 +2,8 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
 #include <Wire.h>
+
+ //Toca definir el addres y busca en el codigo cual es cual
   //Este sensor hace dos cosas accelerometro y magnetismo
 //Objetos
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(0x1D);
