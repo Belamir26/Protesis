@@ -245,9 +245,11 @@ class ICM42605
     // private functions
     int write2(uint8_t subAddress, uint8_t data, bool fulx, uint8_t mask);
     int read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitwised);
+    int read3(uint8_t subAddress, uint8_t dest);
     int writeRegister(uint8_t subAddress, uint8_t data);
     int readRegisters(uint8_t subAddress, uint8_t count, uint8_t* dest);
     int whoAmI();
+    int whoAreWE();
 };
 
 #endif

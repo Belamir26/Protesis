@@ -51,7 +51,9 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
   }
 
   reset();
-
+  if(whoAreWE() !=66){
+    return 30;
+  }
   // check the WHO AM I byte, expected value is 0x42 (decimal 66)
   if(whoAmI() != 66) {
     return -1;
@@ -93,15 +95,30 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
 
   /* Initialize Apex tap Measurement*/
   if(_useTAP){
-    write2(ICM42605_APEX_CONFIG8,2<<5,0,0b01100000);  //TAP_TMAX to 2
-    write2(ICM42605_APEX_CONFIG8,3,0,0b00000111);     //TAP_TMIN to 3
-    write2(ICM42605_APEX_CONFIG8,3<<3,0,0b00011000);  //TAP_TAVG to 3
-    write2(ICM42605_APEX_CONFIG7,17<<2,0,0b11111100); //TAP_MIN_JERK_THR to 17
-    write2(ICM42605_APEX_CONFIG7,2,0,0b00000011);     //TAP_MAX_PEAK_TOL to 2
+    if(write2(ICM42605_APEX_CONFIG8,2<<5,0,0b01100000) < 0){  //TAP_TMAX to 2
+      return 20;
+    }
+    if(write2(ICM42605_APEX_CONFIG8,3,0,0b00000111) < 0){     //TAP_TMIN to 3
+      return 21;
+    }
+    if(write2(ICM42605_APEX_CONFIG8,3<<3,0,0b00011000) <0){   //TAP_TAVG to 3
+      return 22;
+    }
+    if(write2(ICM42605_APEX_CONFIG7,17<<2,0,0b11111100) < 0){ //TAP_MIN_JERK_THR to 17
+      return 23;
+    }  
+    if(write2(ICM42605_APEX_CONFIG7,2,0,0b00000011) < 0){     //TAP_MAX_PEAK_TOL to 2
+      return 24;
+    }      
     delay(1);
-    write2(ICM42605_INT_SOURCE6,1,0,0b00000001);      //Bit 0 in INT_SOURCE6 to 1
+    if(write2(ICM42605_INT_SOURCE6,1,0,0b00000001) < 0){      //Bit 0 in INT_SOURCE6 to 1
+      return 25;
+    }   
     delay(50);
-    write2(ICM42605_APEX_CONFIG0,1<<6,0,0b01000000);  //TAP_ENABLE to 1 
+    if(write2(ICM42605_APEX_CONFIG0,1<<6,0,0b01000000)<0){    //TAP_ENABLE to 1 
+      return 26;
+    }
+      
   }
 
   return 1;
@@ -374,10 +391,35 @@ uint8_t ICM42605::status()
 
 /*Writes a data(bit-wised) to ICM42605's register with a mask to specific bit's order*/
 int ICM42605::write2(uint8_t subAddress, uint8_t data, bool fulx, byte mask){
+
   Serial.print("Writting to Address:   ");
   Serial.println(subAddress,HEX);
-  readRegisters(subAddress,1,_buffer);
+  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));
+  digitalWrite(_csPin,LOW); // select the ICM20689 chip
+  _spi->transfer(subAddress | SPI_READ); // specify the starting register address
+  _buffi = _spi->transfer(0x00); 
+  digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
+  _spi->endTransaction(); // end the transaction
+  Serial.print("Valor leido antes del cambio     ");
+  Serial.println(_buffi,HEX);  
 
+
+  //Data conversion
+  byte current_data_value = _buffi;
+  byte clear_data= current_data_value & ~mask;
+  _newValue = clear_data |data;
+  Serial.print("Valor para cambio     ");
+  Serial.println(_newValue,HEX);
+
+  //Write
+   digitalWrite(_csPin,LOW); // select the ICM20689 chip
+  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));
+  _spi->transfer(subAddress); // specify the starting register address
+  _spi->transfer(_newValue); 
+  _spi->endTransaction(); // end the transaction
+  digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
+
+  /*
   //Writing
   if(_useSPI){
     _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3)); // begin the transaction
@@ -389,19 +431,35 @@ int ICM42605::write2(uint8_t subAddress, uint8_t data, bool fulx, byte mask){
     }
     else
     {
-      _spi->transfer(subAddress | SPI_READ);
       byte current_data_value = _buffer[0]; //adress value
       byte clear_address = current_data_value & ~mask; //Clear the current data with the desired positions(mask)
       _newValue = clear_address | data;
+      Serial.print("Valor para cambio     ");
+      Serial.println(_newValue);
       _spi->transfer(subAddress); // write the register address
       _spi->transfer(_newValue); // write the data
     }
     digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
     _spi->endTransaction(); // end the transaction
   }
+  */
 
   //Validation
-  readRegisters(subAddress,1,_buffer);
+  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));
+  digitalWrite(_csPin,LOW); // select the ICM20689 chip
+  _spi->transfer(subAddress | SPI_READ); // specify the starting register address
+  _buffi= _spi->transfer(0X00);
+  digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
+  _spi->endTransaction(); // end the transaction
+  Serial.print("Valor leido luego del cambio...  ");
+  Serial.println(_buffi,HEX);
+
+  if(_buffi==_newValue){
+    return 1;
+  }else{
+    return -1;
+  }
+  /*
   if(fulx){
     if(_buffer[0] == data) {
       return 1;
@@ -418,6 +476,11 @@ int ICM42605::write2(uint8_t subAddress, uint8_t data, bool fulx, byte mask){
       return -1;
     }
   }
+  
+  
+  */
+
+  
 }
 
 /*Reads a specific bit regisisters from ICM42605 given address*/
@@ -428,16 +491,29 @@ int ICM42605::read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitw
     digitalWrite(_csPin,LOW); // select the ICM20689 chip
     _spi->transfer(subAddress | SPI_READ); // specify the starting register address
     byte data_receivedx = _spi->transfer(0x00);
+    digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
+    _spi->endTransaction(); // end the transaction
+
     //Conversion to obtain the desired data  /i have to ask if i can put byte in theses scenarios
     byte data_clearx = data_receivedx & mask;
     byte data_fullx = data_clearx>> bitwised;
     dest = data_fullx; // Save the data to dest
-    digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
-    _spi->endTransaction(); // end the transaction
     return 1;
   }else{
     return -1;
   }
+}
+
+int ICM42605::read3(uint8_t subAddress, uint8_t dest){
+  Serial.print("Writting to Address:   ");
+  Serial.println(subAddress,HEX);
+  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));
+  digitalWrite(_csPin,LOW); // select the ICM20689 chip
+  _spi->transfer(subAddress | SPI_READ); // specify the starting register address
+  _buffi = _spi->transfer(0x00); 
+  digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
+  _spi->endTransaction(); // end the transaction
+  return 1;
 }
 
 
@@ -537,4 +613,16 @@ int ICM42605::whoAmI(){
   Serial.println();
   Serial.println();
   return _buffer[0];
+}
+
+//Optimizanding
+int ICM42605::whoAreWE(){
+  if(read3(ICM42605_WHO_AM_I,_buffi)<0){
+    return -1;
+  }
+  Serial.print("Who Are We?  ");
+  Serial.print(_buffi);
+  Serial.println();
+  Serial.println();
+  return _buffi;
 }
