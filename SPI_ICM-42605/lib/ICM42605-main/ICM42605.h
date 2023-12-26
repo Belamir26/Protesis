@@ -214,7 +214,7 @@ class ICM42605
     // buffer for reading from sensor
     uint8_t _buffer[15] = {};
     uint8_t _buffi=0;
-    byte _newValue=0;
+    uint8_t _newValue=0;
     // i2c
     uint8_t _address = 0;
     TwoWire *_i2c = {};
@@ -243,9 +243,11 @@ class ICM42605
     float aRes, gRes;               // scale resolutions per LSB for the accel and gyro sensor2
     float accelBias[3] = {0., 0., 0.}, gyroBias[3] = {0., 0., 0.}; // offset biases for the accel and gyro
     // private functions
-    int write2(uint8_t subAddress, uint8_t data, bool fulx, uint8_t mask);
+    int write2(uint8_t subAddress, uint8_t data, uint8_t mask);
     int read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitwised);
-    int read3(uint8_t subAddress, uint8_t dest);
+
+    int write3(uint8_t subAddress, uint8_t data);
+    int read3(uint8_t subAddress, uint8_t &dest);
     int writeRegister(uint8_t subAddress, uint8_t data);
     int readRegisters(uint8_t subAddress, uint8_t count, uint8_t* dest);
     int whoAmI();

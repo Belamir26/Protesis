@@ -51,18 +51,29 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
   }
 
   reset();
+  
   if(whoAreWE() !=66){
-    return 30;
+    return -30;
   }
+
   // check the WHO AM I byte, expected value is 0x42 (decimal 66)
   if(whoAmI() != 66) {
     return -1;
+  }
+  
+  
+  if(write3(ICM42605_PWR_MGMT0,0x0F)<0){
+    return -31;
   }
   // enable gyro and accel in low noise mode
   if(writeRegister(ICM42605_PWR_MGMT0,0x0F) < 0) { 
     return -2;
   }
    // gyro full scale and data rate
+
+  if(write3(ICM42605_GYRO_CONFIG0, GODR | Gscale << 5 )<0){
+    return -32;
+  } 
   if(writeRegister(ICM42605_GYRO_CONFIG0, GODR | Gscale << 5 ) < 0) { 
     return -3;
   }
@@ -95,27 +106,32 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
 
   /* Initialize Apex tap Measurement*/
   if(_useTAP){
-    if(write2(ICM42605_APEX_CONFIG8,2<<5,0,0b01100000) < 0){  //TAP_TMAX to 2
-      return 20;
+    if(write3(ICM42605_APEX_CONFIG8,0x40)<0){
+      return -40;
     }
-    if(write2(ICM42605_APEX_CONFIG8,3,0,0b00000111) < 0){     //TAP_TMIN to 3
+
+
+//    if(write2(ICM42605_APEX_CONFIG8,2<<5,0b01100000) < 0){  //TAP_TMAX to 2
+//      return 20;
+//    }
+    if(write2(ICM42605_APEX_CONFIG8,3,0b00000111) < 0){     //TAP_TMIN to 3
       return 21;
     }
-    if(write2(ICM42605_APEX_CONFIG8,3<<3,0,0b00011000) <0){   //TAP_TAVG to 3
+    if(write2(ICM42605_APEX_CONFIG8,3<<3,0b00011000) <0){   //TAP_TAVG to 3
       return 22;
     }
-    if(write2(ICM42605_APEX_CONFIG7,17<<2,0,0b11111100) < 0){ //TAP_MIN_JERK_THR to 17
+    if(write2(ICM42605_APEX_CONFIG7,17<<2,0b11111100) < 0){ //TAP_MIN_JERK_THR to 17
       return 23;
     }  
-    if(write2(ICM42605_APEX_CONFIG7,2,0,0b00000011) < 0){     //TAP_MAX_PEAK_TOL to 2
+    if(write2(ICM42605_APEX_CONFIG7,2,0b00000011) < 0){     //TAP_MAX_PEAK_TOL to 2
       return 24;
     }      
     delay(1);
-    if(write2(ICM42605_INT_SOURCE6,1,0,0b00000001) < 0){      //Bit 0 in INT_SOURCE6 to 1
+    if(write2(ICM42605_INT_SOURCE6,1,0b00000001) < 0){      //Bit 0 in INT_SOURCE6 to 1
       return 25;
     }   
     delay(50);
-    if(write2(ICM42605_APEX_CONFIG0,1<<6,0,0b01000000)<0){    //TAP_ENABLE to 1 
+    if(write2(ICM42605_APEX_CONFIG0,1<<6,0b01000000)<0){    //TAP_ENABLE to 1 
       return 26;
     }
       
@@ -387,101 +403,49 @@ uint8_t ICM42605::status()
 }
 
 
-
-
 /*Writes a data(bit-wised) to ICM42605's register with a mask to specific bit's order*/
-int ICM42605::write2(uint8_t subAddress, uint8_t data, bool fulx, byte mask){
-
-  Serial.print("Writting to Address:   ");
-  Serial.println(subAddress,HEX);
-  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));
-  digitalWrite(_csPin,LOW); // select the ICM20689 chip
-  _spi->transfer(subAddress | SPI_READ); // specify the starting register address
-  _buffi = _spi->transfer(0x00); 
-  digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
-  _spi->endTransaction(); // end the transaction
-  Serial.print("Valor leido antes del cambio     ");
-  Serial.println(_buffi,HEX);  
-
+int ICM42605::write2(uint8_t subAddress, uint8_t data, uint8_t mask){
+  uint8_t buffeo=0x70;
+  Serial.print("Validation BUFF: ");
+  Serial.print(buffeo, HEX);
+  Serial.print("Writting to Address: ");
+  Serial.println(subAddress, HEX);
+  read3(subAddress, buffeo);
+  Serial.print("Initial Data: ");
+  Serial.print(buffeo, HEX);
 
   //Data conversion
-  byte current_data_value = _buffi;
-  byte clear_data= current_data_value & ~mask;
-  _newValue = clear_data |data;
-  Serial.print("Valor para cambio     ");
-  Serial.println(_newValue,HEX);
+  uint8_t current_data = buffeo;
+  uint8_t clear_data = current_data & ~mask;
+  _newValue = clear_data | data;
 
-  //Write
-   digitalWrite(_csPin,LOW); // select the ICM20689 chip
-  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));
-  _spi->transfer(subAddress); // specify the starting register address
-  _spi->transfer(_newValue); 
-  _spi->endTransaction(); // end the transaction
-  digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
 
-  /*
   //Writing
-  if(_useSPI){
-    _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3)); // begin the transaction
-    digitalWrite(_csPin,LOW);// select the ICM20689 chip
-    if (fulx)
-    {
-      _spi->transfer(subAddress); // write the register address
-      _spi->transfer(data); // write the data
-    }
-    else
-    {
-      byte current_data_value = _buffer[0]; //adress value
-      byte clear_address = current_data_value & ~mask; //Clear the current data with the desired positions(mask)
-      _newValue = clear_address | data;
-      Serial.print("Valor para cambio     ");
-      Serial.println(_newValue);
-      _spi->transfer(subAddress); // write the register address
-      _spi->transfer(_newValue); // write the data
-    }
-    digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
-    _spi->endTransaction(); // end the transaction
-  }
-  */
-
-  //Validation
-  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));
+  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3)); // begin the transaction
   digitalWrite(_csPin,LOW); // select the ICM20689 chip
-  _spi->transfer(subAddress | SPI_READ); // specify the starting register address
-  _buffi= _spi->transfer(0X00);
+  _spi->transfer(subAddress); // write the register address
+  _spi->transfer(_newValue); // write the data
   digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
   _spi->endTransaction(); // end the transaction
-  Serial.print("Valor leido luego del cambio...  ");
-  Serial.println(_buffi,HEX);
-
-  if(_buffi==_newValue){
+  Serial.print("Data sent: ");
+  Serial.println(_newValue, HEX);
+  delay(10);
+  //Validation
+  read3(subAddress, buffeo);
+  Serial.print("Data Recieved: ");
+  Serial.print(buffeo, HEX);
+  Serial.println();
+  Serial.println();
+  if(_buffi == _newValue) {
     return 1;
-  }else{
+  }
+  else{
     return -1;
   }
-  /*
-  if(fulx){
-    if(_buffer[0] == data) {
-      return 1;
-    }
-    else{
-      return -1;
-  }
 
-  }else{
-    if(_buffer[0] == _newValue) {
-      return 1;
-    }
-    else{
-      return -1;
-    }
-  }
-  
-  
-  */
 
-  
 }
+
 
 /*Reads a specific bit regisisters from ICM42605 given address*/
 int ICM42605::read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitwised){
@@ -504,16 +468,48 @@ int ICM42605::read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitw
   }
 }
 
-int ICM42605::read3(uint8_t subAddress, uint8_t dest){
-  Serial.print("Writting to Address:   ");
+
+/* Read one addres without mask*/
+int ICM42605::read3(uint8_t subAddress, uint8_t &dest){
+  Serial.print("Reading Address:   ");
   Serial.println(subAddress,HEX);
   _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));
   digitalWrite(_csPin,LOW); // select the ICM20689 chip
   _spi->transfer(subAddress | SPI_READ); // specify the starting register address
-  _buffi = _spi->transfer(0x00); 
+  dest = _spi->transfer(0x00); 
   digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
   _spi->endTransaction(); // end the transaction
+  _buffi = dest;
   return 1;
+}
+/*Writes full byte data in one address */
+int ICM42605::write3(uint8_t subAddress, uint8_t data){
+  Serial.print("Writting to Address: ");
+  Serial.println(subAddress, HEX);
+  read3(subAddress, _buffi);
+  Serial.print("Initial Data: ");
+  Serial.print(_buffi, HEX);
+  _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3)); // begin the transaction
+  digitalWrite(_csPin,LOW); // select the ICM20689 chip
+  _spi->transfer(subAddress); // write the register address
+  _spi->transfer(data); // write the data
+  digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
+  _spi->endTransaction(); // end the transaction
+  Serial.print("Data sent: ");
+  Serial.println(data, HEX);
+  delay(10);
+  //Validation
+  read3(subAddress, _buffi);
+  Serial.print("Data Recieved: ");
+  Serial.print(_buffi, HEX);
+  Serial.println();
+  Serial.println();
+  if(_buffi == data) {
+    return 1;
+  }
+  else{
+    return -1;
+  }
 }
 
 
