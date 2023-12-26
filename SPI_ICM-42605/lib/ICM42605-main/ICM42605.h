@@ -193,6 +193,7 @@ class ICM42605
     //void selfTest();
     int readSensor(int16_t * destination);
     int readApex(int16_t * destination);
+    int readApexTap(int16_t * destination);
     uint8_t status();
     double getAccelX();
     double getAccelY();
