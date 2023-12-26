@@ -185,7 +185,7 @@ double ICM42605::getCadence(){
 
 
 /* Read Apex Tap Feature*/
-int ICM42605::readApexTap(int16_t * destination){
+int ICM42605::readApexTap(){
   /* _tap
   0 interrupt register
   1 Tap Count
@@ -202,6 +202,8 @@ int ICM42605::readApexTap(int16_t * destination){
     read2(ICM42605_APEX_DATA4,_buffi,0b00000001,0);
     _tap[3]= _buffi;
     return 1;
+  }else{
+    return -1;
   }
 }
 
@@ -433,6 +435,8 @@ int ICM42605::read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitw
     digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
     _spi->endTransaction(); // end the transaction
     return 1;
+  }else{
+    return -1;
   }
 }
 

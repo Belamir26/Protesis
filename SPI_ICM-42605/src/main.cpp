@@ -8,6 +8,7 @@ uint8_t Ascale = AFS_2G, Gscale=GFS_250DPS, AODR=AODR_1000Hz, GODR=GODR_1000Hz;
 int16_t ICM42605Data[3];
 
 
+
 void setup() {
   Serial.begin(115200);
   while(!Serial){}
@@ -26,8 +27,16 @@ void setup() {
 }
 
 void loop() {
-  
-  
+  IMU.readApexTap();
+  Serial.print("Interrupt:    ");
+  Serial.println(IMU.getTapInterrupt());
+  Serial.print("Count:        ");
+  Serial.println(IMU.getTapCount());
+  Serial.print("Axis:         ");
+  Serial.println(IMU.getTapAxis());
+  Serial.print("Polarity:     ");
+  Serial.println(IMU.getTapPolarity());
+  delay(10);
   /*
   Serial.println("ax,ay,az,gx,gy,gz,temp_C");
   IMU.readSensor(ICM42605Data);
