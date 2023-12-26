@@ -91,33 +91,18 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
   }
 
 
-  /* Read Apex tap Measurement
-  Steps to initialize Apex hardware
-  TAP_TMAX 2, 47H in 4
-  TAP_TMin to 3 47h in 4
-  Tap_tAVG to 3 47h in 4
-
-  tap min jerk thr 17 46h in 4
-  tap max peak tol 2 46h in 54
-  wait 1mil
-
-  tap source for int1 by setting bit 0 in register  INT_SOURCE6 to 1 (4Dh in 4)
-  wait 50mil
-  tap feature by setting TAP_enable to 1 56h in 0bank
-  */
+  /* Initialize Apex tap Measurement*/
   if(_useTAP){
-    write2(ICM42605_APEX_CONFIG8,2<<5,0,0b01100000);
-    write2(ICM42605_APEX_CONFIG8,3,0,0b00000111);
-    write2(ICM42605_APEX_CONFIG8,3<<3,0,0b00011000);
-    write2(ICM42605_APEX_CONFIG7,17<<2,0,0b11111100);
-    write2(ICM42605_APEX_CONFIG7,2,0,0b00000011);
+    write2(ICM42605_APEX_CONFIG8,2<<5,0,0b01100000);  //TAP_TMAX to 2
+    write2(ICM42605_APEX_CONFIG8,3,0,0b00000111);     //TAP_TMIN to 3
+    write2(ICM42605_APEX_CONFIG8,3<<3,0,0b00011000);  //TAP_TAVG to 3
+    write2(ICM42605_APEX_CONFIG7,17<<2,0,0b11111100); //TAP_MIN_JERK_THR to 17
+    write2(ICM42605_APEX_CONFIG7,2,0,0b00000011);     //TAP_MAX_PEAK_TOL to 2
     delay(1);
-    write2(ICM42605_INT_SOURCE6,1,0,0b00000001);
+    write2(ICM42605_INT_SOURCE6,1,0,0b00000001);      //Bit 0 in INT_SOURCE6 to 1
     delay(50);
-    write2(ICM42605_APEX_CONFIG0,1<<6,0,0b01000000);
+    write2(ICM42605_APEX_CONFIG0,1<<6,0,0b01000000);  //TAP_ENABLE to 1 
   }
-
-
 
   return 1;
 }
@@ -199,9 +184,9 @@ double ICM42605::getCadence(){
 }
 
 
-
+/* Read Apex Tap Feature*/
 int ICM42605::readApexTap(int16_t * destination){
-
+  return 1;
 }
 
 
@@ -359,7 +344,8 @@ int ICM42605::write2(uint8_t subAddress, uint8_t data, bool fulx, byte mask){
   Serial.print("Writting to Address:   ");
   Serial.println(subAddress,HEX);
   readRegisters(subAddress,1,_buffer);
-
+  
+  //Writing
   if(_useSPI){
     _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3)); // begin the transaction
     digitalWrite(_csPin,LOW);// select the ICM20689 chip
