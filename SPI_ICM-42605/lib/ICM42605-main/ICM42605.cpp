@@ -339,12 +339,12 @@ uint8_t ICM42605::status()
 
 
 
-//Data igual forma Shift hex<<position
+/*Writes a data(bit-wised) to ICM42605's register with a mask to specific bit's order*/
 int ICM42605::write2(uint8_t subAddress, uint8_t data, bool fulx, byte mask){
   Serial.print("Writting to Address:   ");
   Serial.println(subAddress,HEX);
   readRegisters(subAddress,1,_buffer);
-  
+
   //Writing
   if(_useSPI){
     _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3)); // begin the transaction
@@ -386,6 +386,26 @@ int ICM42605::write2(uint8_t subAddress, uint8_t data, bool fulx, byte mask){
     }
   }
 }
+
+/*Reads a specific bit regisisters from ICM42605 given address*/
+int ICM42605::read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitwised){
+  if (_useSPI){
+    //begin the transaction
+    _spi->beginTransaction(SPISettings(SPI_HS_CLOCK, MSBFIRST, SPI_MODE3));
+    digitalWrite(_csPin,LOW); // select the ICM20689 chip
+    _spi->transfer(subAddress | SPI_READ); // specify the starting register address
+    byte data_receivedx = _spi->transfer(0x00);
+    //Conversion to obtain the desired data  /i have to ask if i can put byte in theses scenarios
+    byte data_clearx = data_receivedx & mask;
+    byte data_fullx = data_clearx>> bitwised;
+    dest = data_fullx; // Save the data to dest
+    digitalWrite(_csPin,HIGH); // deselect the ICM20689 chip
+    _spi->endTransaction(); // end the transaction
+    return 1;
+  }
+  return 0;
+}
+
 
 /* writes a byte to ICM20689 register given a register address and data */
 int ICM42605::writeRegister(uint8_t subAddress, uint8_t data){

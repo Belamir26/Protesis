@@ -237,6 +237,7 @@ class ICM42605
     float accelBias[3] = {0., 0., 0.}, gyroBias[3] = {0., 0., 0.}; // offset biases for the accel and gyro
     // private functions
     int write2(uint8_t subAddress, uint8_t data, bool fulx, uint8_t mask);
+    int read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitwised);
     int writeRegister(uint8_t subAddress, uint8_t data);
     int readRegisters(uint8_t subAddress, uint8_t count, uint8_t* dest);
     int whoAmI();
