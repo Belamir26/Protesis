@@ -186,10 +186,41 @@ double ICM42605::getCadence(){
 
 /* Read Apex Tap Feature*/
 int ICM42605::readApexTap(int16_t * destination){
-  return 1;
+  /* _tap
+  0 interrupt register
+  1 Tap Count
+  2 Tap Axis
+  3 Polarity of tap pulse
+  */
+  if(_useTAP){
+    read2(ICM42605_INT_STATUS3,_buffi,0b00000001,0);
+    _tap[0]= _buffi;
+    read2(ICM42605_APEX_DATA4,_buffi,0b00011000,3);
+    _tap[1]= _buffi;
+    read2(ICM42605_APEX_DATA4,_buffi,0b00000110,1);
+    _tap[2]= _buffi;
+    read2(ICM42605_APEX_DATA4,_buffi,0b00000001,0);
+    _tap[3]= _buffi;
+    return 1;
+  }
 }
 
-
+/*Returns the Tap interrupt*/
+double ICM42605::getTapInterrupt(){
+  return _tap[0];
+}
+/*Returns the Tap Count*/
+double ICM42605::getTapCount(){
+  return _tap[1];
+}
+/*Returns the Tap Axis*/
+double ICM42605::getTapAxis(){
+  return _tap[2];
+}
+/*Returns the Tap Polarity*/
+double ICM42605::getTapPolarity(){
+  return _tap[3];
+}
 
 
 int ICM42605::readSensor(int16_t * destination)
@@ -403,7 +434,6 @@ int ICM42605::read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitw
     _spi->endTransaction(); // end the transaction
     return 1;
   }
-  return 0;
 }
 
 

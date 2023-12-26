@@ -204,10 +204,16 @@ class ICM42605
     double getTemperature_C();
     double getStepCount();
     double getCadence();
+    //Get Tap's Features
+    double getTapInterrupt();
+    double getTapCount();
+    double getTapAxis();
+    double getTapPolarity();
   private:
     float _aRes, _gRes;
     // buffer for reading from sensor
     uint8_t _buffer[15] = {};
+    uint8_t _buffi=0;
     byte _newValue=0;
     // i2c
     uint8_t _address = 0;
@@ -229,6 +235,7 @@ class ICM42605
     int16_t _gyroCounts[3] = {};
     int16_t _tcounts = 0;
     // data buffer
+    double _tap[4]={};
     double _acc[3] = {};
     double _gyro[3] = {};
     double _step[2] = {};
