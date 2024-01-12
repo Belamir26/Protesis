@@ -23,26 +23,11 @@ void setup() {
       Serial.println(status);
       while(1) {}
     }
-    Serial.println("ax,ay,az,gx,gy,gz,temp_C");
 
 
 }
 
 void loop() {
-    IMU.readSensor(ICM42605Data);
-    Serial.print(IMU.getAccelX(),6);
-    Serial.print(",");
-    Serial.print(IMU.getAccelY(),6);
-    Serial.print(",");
-    Serial.print(IMU.getAccelZ(),6);
-    Serial.print(",");
-    Serial.print(IMU.getGyroX(),6);
-    Serial.print(",");
-    Serial.print(IMU.getGyroY(),6);
-    Serial.print(",");
-    Serial.print(IMU.getGyroZ(),6);
-    Serial.print(",");
-    Serial.println(IMU.getTemperature_C(),6);
-    delay(10);
+  
 }
 

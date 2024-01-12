@@ -8,10 +8,12 @@ ICM42605::ICM42605(SPIClass &bus, uint8_t csPin, uint8_t APEX)
     _spi= &bus;
     _csPin = csPin;
     _useSPI = true;
+    if(APEX==0){_useRegular=true;}
     if(APEX==1){_usePedom=true;} 
     if(APEX==2){_useTap=true;} 
 
 }
+/*Initalice the IMU's Object*/
 int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
 {
     aRes= getAres(Ascale);
@@ -20,39 +22,73 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
     pinMode(_csPin,OUTPUT);     // setting CS pin to output
     digitalWrite(_csPin,HIGH);
     _spi->begin();              // begin SPI communication
-
     reset();
 
-    //Initial Configuration...
     // check the WHO AM I byte, expected value is 0x42 (decimal 66)
     if(whoAreWe() !=0x42){
         return -1;
     }
-    // enable gyro and accel in low noise mode
-    if(writeAll(ICM42605_PWR_MGMT0,0x0F) < 0) { 
-        return -2;
+    
+
+    //Regular Accel, Gyro & Temp
+    if(_useRegular){
+      // enable gyro and accel in low noise mode
+      if(writeAll(ICM42605_PWR_MGMT0,0x0F) < 0) { 
+          return -2;
+      }
+      // gyro full scale and data rate
+      if(writeAll(ICM42605_GYRO_CONFIG0, GODR | Gscale << 5 ) < 0) { 
+          return -3;
+      }
+      // set accel full scale and data rate
+      if(writeAll(ICM42605_ACCEL_CONFIG0, AODR | Ascale << 5) < 0) {
+          return -4;
+      }
+      // set temperature sensor low pass filter to 5Hz, use first order gyro filter
+      if(writeAll(ICM42605_GYRO_CONFIG1,0xD0) < 0) {
+          return -5;
+      }
+      //Calculate Bias
+      offsetBias(accelBias, gyroBias);
     }
-    // gyro full scale and data rate
-    if(writeAll(ICM42605_GYRO_CONFIG0, GODR | Gscale << 5 ) < 0) { 
-        return -3;
+
+    //Set Tap's APEX feature
+    if(_useTap){
+      Serial.println("TAP FEATURE ACTIVE");
+      //Initize Sensor..
+      if(writeBits(ICM42605_ACCEL_CONFIG0,AODR_1000Hz,0b0000111)<0){  //ACCEL_ODR=1kHZ, 0x50
+        return 200;
+      }
+      if(writeBits(ICM42605_PWR_MGMT0,1,0b00000011)<0){               //Accel_mode=1, 0x4E
+        return 201;
+      }
+      if(writeBits(ICM42605_ACCEL_CONFIG1,2<<3,0b00011000)<0){        //accel_ui_filt_ord=2 0x53 bank0
+        return 202;
+      }
+      if(writeBits(ICM42605_GYRO_ACCEL_CONFIG0,0<<4,0b11110000)<0){   // accel_ui_gilt_bw=0 0x52 bank0
+        return 203;
+      }
+      delay(1);                                                       //wait 1m
+                                                             
+      //Initialize APEX Hardware...
+
+      /*ESTOS NO COGE*/
+      writeBits(ICM42605_APEX_CONFIG8, 2<<5,0b01100000);        //Tap_TMAX to 2 ,0X47
+      writeBits(ICM42605_APEX_CONFIG8,3,0b00000111);            //TAP_TMIN to 3 ,0x47
+      writeBits(ICM42605_APEX_CONFIG8,3,0b00011000);            //TAP_TAVG to 3, 0x47
+      writeBits(ICM42605_APEX_CONFIG7,17<<2,0b11111100);        //TAP_MIN_JERK_THR to 17, 0x46
+      writeBits(ICM42605_APEX_CONFIG7,2,0b00000011);            //TAP_MAX_PEAK_TOL to 2, 0x46
+      /* ESTOS NO COGE*/
+      
+      delay(1);                                                 //Wait 1mili
+      if(writeBits(ICM42605_INT_SOURCE6,1,0b00000001)<0){       //Enable TAP source ->  INT_SOURCE6(bit-0) to 1  0x4D
+        return 209;
+      }                                                     
+      delay(50);                                                //Wait 501mili
+      if(writeBits(ICM42605_APEX_CONFIG0,1<<6,0b01000000)<0){   //Turn on TAP feature -> TAP_Enable to 1  0x56
+        return 210;
+      }                                              
     }
-    // set accel full scale and data rate
-    if(writeAll(ICM42605_ACCEL_CONFIG0, AODR | Ascale << 5) < 0) {
-        return -4;
-    }
-    // set temperature sensor low pass filter to 5Hz, use first order gyro filter
-    if(writeAll(ICM42605_GYRO_CONFIG1,0xD0) < 0) {
-        return -5;
-    }
-
-    //Calculate Bias
-    offsetBias(accelBias, gyroBias);
-
-
-
-
-
-
     return 1;
 }
 /*Reset Device*/

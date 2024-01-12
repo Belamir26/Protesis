@@ -188,6 +188,7 @@ class ICM42605{
         double getGyroY();
         double getGyroZ();
         double getTemperature_C();
+        //APEX Tap
     private:
         //Buffers
         uint8_t _buffi=0;
@@ -211,7 +212,8 @@ class ICM42605{
         const uint8_t SPI_READ = 0x80;
         const uint32_t SPI_LS_CLOCK = 400000; // 1 MHz
         const uint32_t SPI_HS_CLOCK = 1000000; // 7 MHz
-        //Apex 
+        //To configurate
+        bool _useRegular = false;
         bool _usePedom = false;
         bool _useTap = false;
         //Private Functions
