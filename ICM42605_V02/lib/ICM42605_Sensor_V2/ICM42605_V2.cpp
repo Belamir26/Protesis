@@ -71,14 +71,27 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
       delay(1);                                                       //wait 1m
                                                              
       //Initialize APEX Hardware...
+      /* tengo que apagar el accel and gyro... COMO???*/
 
-      /*ESTOS NO COGE*/
+      //turn off
+      Serial.println("TURN OFF GYRO AND ACCEL");
+      Serial.println();
+      Serial.println();
+      writeBits(ICM42605_PWR_MGMT0,0,0b00000011);
+      writeBits(ICM42605_PWR_MGMT0,0x47,0b00001100);
+
+      /*ESTOS NO COGE*/ 
       writeBits(ICM42605_APEX_CONFIG8, 2<<5,0b01100000);        //Tap_TMAX to 2 ,0X47
       writeBits(ICM42605_APEX_CONFIG8,3,0b00000111);            //TAP_TMIN to 3 ,0x47
       writeBits(ICM42605_APEX_CONFIG8,3,0b00011000);            //TAP_TAVG to 3, 0x47
       writeBits(ICM42605_APEX_CONFIG7,17<<2,0b11111100);        //TAP_MIN_JERK_THR to 17, 0x46
       writeBits(ICM42605_APEX_CONFIG7,2,0b00000011);            //TAP_MAX_PEAK_TOL to 2, 0x46
       /* ESTOS NO COGE*/
+      Serial.println("TURN ON GYRO AND ACCEL");   
+      Serial.println();
+      Serial.println();
+      writeBits(ICM42605_PWR_MGMT0,3,0b00000011);    // low noise
+      writeBits(ICM42605_PWR_MGMT0,0<<2,0b00001100);  // Gyro no se requiere
       
       delay(1);                                                 //Wait 1mili
       if(writeBits(ICM42605_INT_SOURCE6,1,0b00000001)<0){       //Enable TAP source ->  INT_SOURCE6(bit-0) to 1  0x4D
