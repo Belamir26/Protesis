@@ -52,7 +52,7 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
 
   reset();
   
-  if(whoAreWE() !=66){
+  if(whoAreWE() !=0x42){
     return -30;
   }
 
@@ -104,13 +104,16 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
   }
 
 
+
+
   /* Initialize Apex tap Measurement*/
   if(_useTAP){
+
+    write3(ICM42605_SIGNAL_PATH_RESET,0);
+
     if(write3(ICM42605_APEX_CONFIG8,0x40)<0){
       return -40;
     }
-
-
 //    if(write2(ICM42605_APEX_CONFIG8,2<<5,0b01100000) < 0){  //TAP_TMAX to 2
 //      return 20;
 //    }

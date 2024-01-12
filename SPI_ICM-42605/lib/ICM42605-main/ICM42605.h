@@ -245,7 +245,6 @@ class ICM42605
     // private functions
     int write2(uint8_t subAddress, uint8_t data, uint8_t mask);
     int read2(uint8_t subAddress, uint8_t dest, uint8_t mask, uint8_t bitwised);
-
     int write3(uint8_t subAddress, uint8_t data);
     int read3(uint8_t subAddress, uint8_t &dest);
     int writeRegister(uint8_t subAddress, uint8_t data);
