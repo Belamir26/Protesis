@@ -1,3 +1,7 @@
+/*
+        VERSION 2 DE ICM42605
+*/
+
 #ifndef ICM42605_h
 #define ICM42605_h
 
