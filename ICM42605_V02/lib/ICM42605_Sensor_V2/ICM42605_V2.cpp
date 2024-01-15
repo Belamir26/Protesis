@@ -56,10 +56,19 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
     if(_useTap){
       Serial.println("TAP FEATURE ACTIVE");
       //Initize Sensor..
-      if(writeBits(ICM42605_ACCEL_CONFIG0,AODR_1000Hz,0b0000111)<0){  //ACCEL_ODR=1kHZ, 0x50
+      if(writeBits(ICM42605_ACCEL_CONFIG0,AODR_500Hz,0b0000111)<0){   //ACCEL_ODR=500HZ, 0x50
         return 200;
       }
-      if(writeBits(ICM42605_PWR_MGMT0,1,0b00000011)<0){               //Accel_mode=1, 0x4E
+
+      
+      writeBits(ICM42605_PWR_MGMT0,2,0b00000011);
+      writeBits(ICM42605_INTF_CONFIG1,0<<3,0b00001000);
+      writeBits(ICM42605_ACCEL_CONFIG1,2<<1,0b00000110);
+      writeBits(ICM42605_GYRO_ACCEL_CONFIG0,4<<4,0b11110000);
+
+
+      /*
+      if(writeBits(ICM42605_PWR_MGMT0,3,0b00000011)<0){               //Accel_mode=1, 0x4E
         return 201;
       }
       if(writeBits(ICM42605_ACCEL_CONFIG1,2<<3,0b00011000)<0){        //accel_ui_filt_ord=2 0x53 bank0
@@ -68,29 +77,45 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
       if(writeBits(ICM42605_GYRO_ACCEL_CONFIG0,0<<4,0b11110000)<0){   // accel_ui_gilt_bw=0 0x52 bank0
         return 203;
       }
+      */
+      
+      
       delay(1);                                                       //wait 1m
                                                              
       //Initialize APEX Hardware...
       /* tengo que apagar el accel and gyro... COMO???*/
 
       //turn off
+      Serial.println();
       Serial.println("TURN OFF GYRO AND ACCEL");
       Serial.println();
-      Serial.println();
       writeBits(ICM42605_PWR_MGMT0,0,0b00000011);
-      writeBits(ICM42605_PWR_MGMT0,0x47,0b00001100);
+      writeBits(ICM42605_PWR_MGMT0,0<<2,0b00001100);
 
+      Serial.println();
+      Serial.println("FIXING PROBLEMSSSS....");
+      Serial.println();
+      writeBits(ICM42605_INT_SOURCE6,0,0b01111111);           //Disable any dectection
+      writeBits(ICM42605_INT_SOURCE7,0,0b01111111);           //Disable any dectection
+      writeBits(ICM42605_SIGNAL_PATH_RESET,1<<6,0b01000000);  //Set DMP_INIT_EN for one clycle...  0x4b in bank 0
+      writeBits(ICM42605_SIGNAL_PATH_RESET,0<<6,0b01000000);  //unset DMP_INIT_EN  0x4b bank0
+
+
+      Serial.println();  
+      Serial.println("Problems");
+      Serial.println();   
       /*ESTOS NO COGE*/ 
       writeBits(ICM42605_APEX_CONFIG8, 2<<5,0b01100000);        //Tap_TMAX to 2 ,0X47
       writeBits(ICM42605_APEX_CONFIG8,3,0b00000111);            //TAP_TMIN to 3 ,0x47
-      writeBits(ICM42605_APEX_CONFIG8,3,0b00011000);            //TAP_TAVG to 3, 0x47
+      writeBits(ICM42605_APEX_CONFIG8,3<<3,0b00011000);         //TAP_TAVG to 3, 0x47
       writeBits(ICM42605_APEX_CONFIG7,17<<2,0b11111100);        //TAP_MIN_JERK_THR to 17, 0x46
       writeBits(ICM42605_APEX_CONFIG7,2,0b00000011);            //TAP_MAX_PEAK_TOL to 2, 0x46
       /* ESTOS NO COGE*/
+
+      Serial.println();
       Serial.println("TURN ON GYRO AND ACCEL");   
       Serial.println();
-      Serial.println();
-      writeBits(ICM42605_PWR_MGMT0,3,0b00000011);    // low noise
+      writeBits(ICM42605_PWR_MGMT0,2,0b00000011);    // low power
       writeBits(ICM42605_PWR_MGMT0,0<<2,0b00001100);  // Gyro no se requiere
       
       delay(1);                                                 //Wait 1mili
