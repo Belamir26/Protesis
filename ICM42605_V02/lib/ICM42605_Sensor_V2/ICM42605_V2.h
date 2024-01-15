@@ -220,6 +220,6 @@ class ICM42605{
         void readAll(uint8_t subAddress);
         void readBits(uint8_t subAddress, uint8_t mask, uint8_t bitwised);
         void readFall(uint8_t subAddress, uint8_t count);
-        int whoAreWe();
+        int whoAmI();
 };
 #endif

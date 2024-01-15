@@ -25,7 +25,7 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
 
     //Initial Configuration...
     // check the WHO AM I byte, expected value is 0x42 (decimal 66)
-    if(whoAreWe() !=0x42){
+    if(whoAmI() !=0x42){
         return -1;
     }
     // enable gyro and accel in low noise mode
@@ -46,20 +46,25 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
     }
 
     //Calculate Bias
+    Serial.println();
     offsetBias(accelBias, gyroBias);
-
-
-
-
-
-
     return 1;
 }
 /*Reset Device*/
 void ICM42605::reset()
 {
-    writeAll(ICM42605_DEVICE_CONFIG,0x01);     // reset the ICM42605
-    delay(1);                                       // wait for ICM42605 to come back up
+    Serial.println("Reset ICM...");                                
+    //Write
+    _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));     // begin the transaction
+    digitalWrite(_csPin,LOW);                                                   // select the ICM20689 chip
+    _spi->transfer(ICM42605_DEVICE_CONFIG);                                     // write the register address
+    _spi->transfer(0x01);                                                       // write the data
+    digitalWrite(_csPin,HIGH);                                                  // deselect the ICM20689 chip
+    _spi->endTransaction();                                                     // end the transaction
+    delay(1);                                                                   // wait for ICM42605 to come back up
+    Serial.println("Reset Done...");                                                       
+    Serial.println();
+    
 }
 /*Set Bias*/
 void ICM42605::offsetBias(float * dest1, float * dest2)
@@ -240,11 +245,12 @@ double ICM42605::getTemperature_C() {
 int ICM42605::writeAll(uint8_t subAddress, uint8_t data)
 {
     //Initial conditions
+    Serial.println();
     Serial.print("Writting to Address: ");
-    Serial.print(subAddress, HEX);
+    Serial.println(subAddress, HEX);
     readAll(subAddress);
     Serial.print("Initial Data: ");
-    Serial.print(_buffi, HEX);
+    Serial.println(_buffi, HEX);
     //Write
     _spi->beginTransaction(SPISettings(SPI_LS_CLOCK, MSBFIRST, SPI_MODE3));     // begin the transaction
     digitalWrite(_csPin,LOW);                                                   // select the ICM20689 chip
@@ -258,12 +264,13 @@ int ICM42605::writeAll(uint8_t subAddress, uint8_t data)
     //Validation
     readAll(subAddress);
     Serial.print("Data Recieved:  ");
-    Serial.print(_buffi, HEX);
-    Serial.println();
+    Serial.println(_buffi, HEX);
     if(_buffi == data) {
+        Serial.println("Validation correct");
         return 1;
     }
     else{
+        Serial.println("Validation incorrect");
         return -1;
     }
 }
@@ -319,10 +326,10 @@ void ICM42605::readFall(uint8_t subAddress, uint8_t count)
 
 }
 /* gets the ICM20689 WHO_AM_I register value, expected to be 0x98 */
-int ICM42605::whoAreWe()
+int ICM42605::whoAmI()
 {
     readAll(ICM42605_WHO_AM_I);
-    Serial.print("Who Are We?  ");
+    Serial.print("Who Am I?  ");
     Serial.print(_buffi);
     Serial.println();
     return _buffi;
