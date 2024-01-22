@@ -221,5 +221,6 @@ class ICM42605{
         void readBits(uint8_t subAddress, uint8_t mask, uint8_t bitwised);
         void readFall(uint8_t subAddress, uint8_t count);
         int whoAmI();
+        void selfTest();
 };
 #endif

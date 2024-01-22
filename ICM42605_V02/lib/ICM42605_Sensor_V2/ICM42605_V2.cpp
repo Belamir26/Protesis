@@ -23,6 +23,10 @@ int ICM42605::begin(uint8_t Ascale, uint8_t Gscale, uint8_t AODR, uint8_t GODR)
 
     reset();
 
+    //Self
+    selfTest();
+
+
     //Initial Configuration...
     // check the WHO AM I byte, expected value is 0x42 (decimal 66)
     if(whoAmI() !=0x42){
@@ -333,4 +337,136 @@ int ICM42605::whoAmI()
     Serial.print(_buffi);
     Serial.println();
     return _buffi;
+}
+/*Reads all registers in the IMU*/
+void ICM42605::selfTest()
+{
+  Serial.println("BANK 0...   ");
+  Serial.println();
+  readAll(ICM42605_DEVICE_CONFIG);
+  readAll(ICM42605_DRIVE_CONFIG);
+  readAll(ICM42605_INT_CONFIG);
+  readAll(ICM42605_FIFO_CONFIG);
+  readAll(ICM42605_TEMP_DATA1);
+  readAll(ICM42605_TEMP_DATA0);
+  readAll(ICM42605_ACCEL_DATA_X1);
+  readAll(ICM42605_ACCEL_DATA_X0);
+  readAll(ICM42605_ACCEL_DATA_Y1);
+  readAll(ICM42605_ACCEL_DATA_Y0);
+  readAll(ICM42605_ACCEL_DATA_Z1);
+  readAll(ICM42605_ACCEL_DATA_Z0);
+  readAll(ICM42605_GYRO_DATA_X1);
+  readAll(ICM42605_GYRO_DATA_X0);
+  readAll(ICM42605_GYRO_DATA_Y1);
+  readAll(ICM42605_GYRO_DATA_Y0);
+  readAll(ICM42605_GYRO_DATA_Z1);
+  readAll(ICM42605_GYRO_DATA_Z0);
+  readAll(ICM42605_TMST_FSYNCH);
+  readAll(ICM42605_TMST_FSYNCL);
+  readAll(ICM42605_INT_STATUS);
+  readAll(ICM42605_FIFO_COUNTH);
+  readAll(ICM42605_FIFO_COUNTL);
+  readAll(ICM42605_FIFO_DATA);
+  readAll(ICM42605_APEX_DATA0);
+  readAll(ICM42605_APEX_DATA1);
+  readAll(ICM42605_APEX_DATA2);
+  readAll(ICM42605_APEX_DATA3);
+  readAll(ICM42605_APEX_DATA4);
+  readAll(ICM42605_APEX_DATA5);
+  readAll(ICM42605_INT_STATUS2);
+  readAll(ICM42605_INT_STATUS3);
+  readAll(ICM42605_SIGNAL_PATH_RESET);
+  readAll(ICM42605_INTF_CONFIG0);
+  readAll(ICM42605_INTF_CONFIG1);
+  readAll(ICM42605_PWR_MGMT0);
+  readAll(ICM42605_GYRO_CONFIG0);
+  readAll(ICM42605_ACCEL_CONFIG0);
+  readAll(ICM42605_GYRO_CONFIG1);
+  readAll(ICM42605_GYRO_ACCEL_CONFIG0);
+  readAll(ICM42605_ACCEL_CONFIG1);
+  readAll(ICM42605_TMST_CONFIG);
+  readAll(ICM42605_APEX_CONFIG0);
+  readAll(ICM42605_SMD_CONFIG);
+  readAll(ICM42605_FIFO_CONFIG1);
+  readAll(ICM42605_FIFO_CONFIG2);
+  readAll(ICM42605_FIFO_CONFIG3);
+  readAll(ICM42605_FSYNC_CONFIG);
+  readAll(ICM42605_INT_CONFIG0);
+  readAll(ICM42605_INT_CONFIG1);
+  readAll(ICM42605_INT_SOURCE0);
+  readAll(ICM42605_INT_SOURCE1);
+  readAll(ICM42605_INT_SOURCE3);
+  readAll(ICM42605_INT_SOURCE4);
+  readAll(ICM42605_FIFO_LOST_PKT0);
+  readAll(ICM42605_FIFO_LOST_PKT1);
+  readAll(ICM42605_SELF_TEST_CONFIG);
+  readAll(ICM42605_WHO_AM_I);
+  readAll(ICM42605_REG_BANK_SEL);
+
+
+  Serial.println();
+  Serial.println("BANK 1...   ");
+  Serial.println();
+  readAll(ICM42605_SENSOR_CONFIG0);
+  readAll(ICM42605_GYRO_CONFIG_STATIC2);
+  readAll(ICM42605_GYRO_CONFIG_STATIC3);
+  readAll(ICM42605_GYRO_CONFIG_STATIC4);
+  readAll(ICM42605_GYRO_CONFIG_STATIC5);
+  readAll(ICM42605_GYRO_CONFIG_STATIC6);
+  readAll(ICM42605_GYRO_CONFIG_STATIC7);
+  readAll(ICM42605_GYRO_CONFIG_STATIC8);
+  readAll(ICM42605_GYRO_CONFIG_STATIC9);
+  readAll(ICM42605_GYRO_CONFIG_STATIC10);
+  readAll(ICM42605_XG_ST_DATA);
+  readAll(ICM42605_YG_ST_DATA);
+  readAll(ICM42605_ZG_ST_DATA);
+  readAll(ICM42605_TMSTVAL0);
+  readAll(ICM42605_TMSTVAL1);
+  readAll(ICM42605_TMSTVAL2);
+  readAll(ICM42605_INTF_CONFIG4);
+  readAll(ICM42605_INTF_CONFIG5);
+  readAll(ICM42605_INTF_CONFIG6);
+
+
+  Serial.println();
+  Serial.println("BANK 2...   ");
+  Serial.println();
+  readAll(ICM42605_ACCEL_CONFIG_STATIC2);
+  readAll(ICM42605_ACCEL_CONFIG_STATIC3);
+  readAll(ICM42605_ACCEL_CONFIG_STATIC4);
+  readAll(ICM42605_XA_ST_DATA);
+  readAll(ICM42605_YA_ST_DATA);
+  readAll(ICM42605_ZA_ST_DATA);
+
+
+  Serial.println();
+  Serial.println("BANK 4...   ");
+  Serial.println();
+  readAll(ICM42605_GYRO_ON_OFF_CONFIG);
+  readAll(ICM42605_APEX_CONFIG1);
+  readAll(ICM42605_APEX_CONFIG2);
+  readAll(ICM42605_APEX_CONFIG3);
+  readAll(ICM42605_APEX_CONFIG4);
+  readAll(ICM42605_APEX_CONFIG5);
+  readAll(ICM42605_APEX_CONFIG6);
+  readAll(ICM42605_APEX_CONFIG7);
+  readAll(ICM42605_APEX_CONFIG8);
+  readAll(ICM42605_APEX_CONFIG9);
+  readAll(ICM42605_ACCEL_WOM_X_THR);
+  readAll(ICM42605_ACCEL_WOM_Y_THR);
+  readAll(ICM42605_ACCEL_WOM_Z_THR);
+  readAll(ICM42605_INT_SOURCE6);
+  readAll(ICM42605_INT_SOURCE7);
+  readAll(ICM42605_INT_SOURCE8);
+  readAll(ICM42605_INT_SOURCE9);
+  readAll(ICM42605_INT_SOURCE10);
+  readAll(ICM42605_OFFSET_USER0);
+  readAll(ICM42605_OFFSET_USER1);
+  readAll(ICM42605_OFFSET_USER2);
+  readAll(ICM42605_OFFSET_USER3);
+  readAll(ICM42605_OFFSET_USER4);
+  readAll(ICM42605_OFFSET_USER5);
+  readAll(ICM42605_OFFSET_USER6);
+  readAll(ICM42605_OFFSET_USER7);
+  readAll(ICM42605_OFFSET_USER8);
 }
