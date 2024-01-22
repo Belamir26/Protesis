@@ -304,7 +304,9 @@ void ICM42605::readAll(uint8_t subAddress)
     _spi->transfer(subAddress | SPI_READ);                                      // Specify the address and read mode 0x80
     _buffi = _spi->transfer(0x00);                                              // Saves read in _buffi  
     digitalWrite(_csPin,HIGH);                                                  // Deselect the ICM20689 chip
-    _spi->endTransaction();                                                     // End the transaction                                                    
+    _spi->endTransaction();                                                     // End the transaction
+    Serial.print("Data in bits:   ");
+    Serial.println(_buffi,BIN);                                                    
 }
 /*Reads a specific bit regisisters from ICM42605 given address*/
 void ICM42605::readBits(uint8_t subAddress, uint8_t mask, uint8_t bitwised)
