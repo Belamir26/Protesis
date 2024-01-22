@@ -1,9 +1,9 @@
 There is three branches.
 
 
-the first one, is the main branch, who contains the code you send me, but more optimize and cute :)
-the apex branch has the apex features avaible (only the tap) but this isn't work :(
-the self init branch, we can find the same as the main branch, but in this has been added the auto init. 
+the first one, is the main branch, who contains the code you send me, but more optimize and cute :) //
+the apex branch has the apex features avaible (only the tap) but this isn't work :(//
+the self init branch, we can find the same as the main branch, but in this has been added the auto init. //
 
 
 
